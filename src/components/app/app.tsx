@@ -16,19 +16,21 @@ import {
 import '../../index.css';
 import styles from './app.module.css';
 
-import { useDispatch } from '../../services/store';
+import { useDispatch, useSelector } from '../../services/store';
 
 import { AppHeader, Modal, IngredientDetails, OrderInfo } from '@components';
 import { getIngredients } from '../../services/slices/ingredientSlice';
 import { ProtectedRoute } from '../../components/protected-route/protected-route';
 import { getCookie } from '../../utils/cookie';
 import { fetchUserThunk } from '../../services/slices/userSlice';
+import { getCurrentOrder } from '../../services/slices/orderSlice';
 
 // написание роутинга и модальных окон
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const currentOrder = useSelector(getCurrentOrder);
 
   const backgroundLocation = location.state?.background;
   const handleModalClose = () => navigate(-1);
@@ -123,8 +125,15 @@ const App = () => {
           <Route
             path='/feed/:number'
             element={
-              <Modal title='Детали заказа' onClose={handleModalClose}>
-                <OrderInfo />
+              <Modal
+                title={
+                  <p className='text text_type_digits-default'>
+                    {currentOrder ? `#${currentOrder.number}` : 'Детали заказа'}
+                  </p>
+                }
+                onClose={handleModalClose}
+              >
+                <OrderInfo isModal />
               </Modal>
             }
           />
@@ -132,8 +141,17 @@ const App = () => {
             path='/profile/orders/:number'
             element={
               <ProtectedRoute>
-                <Modal title='Информация о заказе' onClose={handleModalClose}>
-                  <OrderInfo />
+                <Modal
+                  title={
+                    <p className='text text_type_digits-default'>
+                      {currentOrder
+                        ? `#${currentOrder.number}`
+                        : 'Детали заказа'}
+                    </p>
+                  }
+                  onClose={handleModalClose}
+                >
+                  <OrderInfo isModal />
                 </Modal>
               </ProtectedRoute>
             }

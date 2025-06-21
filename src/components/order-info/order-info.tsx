@@ -3,6 +3,8 @@ import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 
+import styles from '../ui/order-info/order-info.module.css';
+
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from '../../services/store';
 import { getIngredientsSelector } from '../../services/slices/ingredientSlice';
@@ -11,7 +13,11 @@ import {
   getOrderByNumber
 } from '../../services/slices/orderSlice';
 
-export const OrderInfo: FC = () => {
+type OrderInfoProps = {
+  isModal?: boolean;
+};
+
+export const OrderInfo: FC<OrderInfoProps> = ({ isModal }) => {
   const orderData = useSelector(getCurrentOrder);
   const dispatch = useDispatch();
 
@@ -25,6 +31,7 @@ export const OrderInfo: FC = () => {
     }
   }, [dispatch, number]);
 
+  /* eslint-disable */
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 
@@ -67,10 +74,23 @@ export const OrderInfo: FC = () => {
       total
     };
   }, [orderData, ingredients]);
+  /* eslint-enable */
 
   if (!orderInfo) {
     return <Preloader />;
   }
 
-  return <OrderInfoUI orderInfo={orderInfo} />;
+  return (
+    <>
+      {!isModal && (
+        <p
+          className='text text_type_digits-default mt-5'
+          style={{ textAlign: 'center' }}
+        >
+          #{orderInfo.number}
+        </p>
+      )}
+      <OrderInfoUI orderInfo={orderInfo} />
+    </>
+  );
 };

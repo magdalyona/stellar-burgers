@@ -170,7 +170,7 @@ const userSlice = createSlice({
       .addCase(fetchUserOrdersThunk.rejected, handleRejected)
       .addCase(fetchUserOrdersThunk.fulfilled, (state, { payload }) => {
         state.request = false;
-        state.userOrders = payload;
+        state.userOrders = payload.orders;
       });
   }
 });

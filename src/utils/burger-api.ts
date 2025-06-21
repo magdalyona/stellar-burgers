@@ -177,29 +177,27 @@ export const loginUser = ({ email, password }: TLoginData) =>
     .then(handleAuthResponse);
 
 export const fetchUser = () =>
-  fetch(`${URL}/auth/user`, {
+  fetchWithRefresh<{ success: boolean; user: TUser }>(`${URL}/auth/user`, {
     headers: { authorization: getCookie('accessToken') as string }
-  }).then((res) => res.json());
+  });
 
 export const updateUserData = (userData: TRegisterData) =>
-  fetch(`${URL}/auth/user`, {
+  fetchWithRefresh<{ success: boolean; user: TUser }>(`${URL}/auth/user`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
       authorization: getCookie('accessToken') as string
     },
     body: JSON.stringify(userData)
-  })
-    .then((res) => res.json())
-    .then(handleAuthResponse);
+  });
 
 export const fetchUserOrders = () =>
-  fetch(`${URL}/orders`, {
+  fetchWithRefresh<{ success: boolean; orders: TOrder[] }>(`${URL}/orders`, {
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
       authorization: getCookie('accessToken') as string
     }
-  }).then((res) => res.json());
+  });
 
 export const logoutUser = async () => {
   await fetch(`${URL}/auth/logout`, {

@@ -18,10 +18,7 @@ export const ProfileOrders: FC = () => {
 
   const loadOrdersData = useCallback(async () => {
     try {
-      await Promise.all([
-        dispatch(fetchUserOrdersThunk()),
-        dispatch(getFeeds())
-      ]);
+      await dispatch(fetchUserOrdersThunk());
       setError(null);
     } catch (err) {
       setError(
