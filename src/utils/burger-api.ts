@@ -1,4 +1,4 @@
-import { setCookie, getCookie } from './cookie';
+import { setCookie, getCookie, deleteCookie } from './cookie';
 import { TIngredient, TOrder, TOrdersData, TUser } from './types';
 
 const URL = process.env.BURGER_API_URL;
@@ -137,44 +137,77 @@ export type TRegisterData = {
   password: string;
 };
 
-type TAuthResponse = TServerResponse<{
-  refreshToken: string;
-  accessToken: string;
-  user: TUser;
-}>;
-
-export const registerUserApi = (data: TRegisterData) =>
-  fetch(`${URL}/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8'
-    },
-    body: JSON.stringify(data)
-  })
-    .then((res) => checkResponse<TAuthResponse>(res))
-    .then((data) => {
-      if (data?.success) return data;
-      return Promise.reject(data);
-    });
-
 export type TLoginData = {
   email: string;
   password: string;
 };
 
-export const loginUserApi = (data: TLoginData) =>
+export type TAuthResponse = {
+  success: boolean;
+  accessToken?: string;
+  refreshToken?: string;
+  user?: TUser;
+  [key: string]: any;
+};
+
+const handleAuthResponse = (data: TAuthResponse) => {
+  if (!data.success) throw new Error('Authentication failed');
+  if (data.accessToken) setCookie('accessToken', data.accessToken);
+  if (data.refreshToken)
+    localStorage.setItem('refreshToken', data.refreshToken);
+  return data;
+};
+
+export const registerUser = (registerData: TRegisterData) =>
+  fetch(`${URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    body: JSON.stringify(registerData)
+  })
+    .then((res) => res.json())
+    .then(handleAuthResponse);
+
+export const loginUser = ({ email, password }: TLoginData) =>
   fetch(`${URL}/auth/login`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8'
-    },
-    body: JSON.stringify(data)
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    body: JSON.stringify({ email, password })
   })
-    .then((res) => checkResponse<TAuthResponse>(res))
-    .then((data) => {
-      if (data?.success) return data;
-      return Promise.reject(data);
-    });
+    .then((res) => res.json())
+    .then(handleAuthResponse);
+
+export const fetchUser = () =>
+  fetchWithRefresh<{ success: boolean; user: TUser }>(`${URL}/auth/user`, {
+    headers: { authorization: getCookie('accessToken') as string }
+  });
+
+export const updateUserData = (userData: TRegisterData) =>
+  fetchWithRefresh<{ success: boolean; user: TUser }>(`${URL}/auth/user`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+      authorization: getCookie('accessToken') as string
+    },
+    body: JSON.stringify(userData)
+  });
+
+export const fetchUserOrders = () =>
+  fetchWithRefresh<{ success: boolean; orders: TOrder[] }>(`${URL}/orders`, {
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+      authorization: getCookie('accessToken') as string
+    }
+  });
+
+export const logoutUser = async () => {
+  await fetch(`${URL}/auth/logout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    body: JSON.stringify({ token: localStorage.getItem('refreshToken') })
+  });
+  localStorage.removeItem('refreshToken');
+  deleteCookie('accessToken');
+};
 
 export const forgotPasswordApi = (data: { email: string }) =>
   fetch(`${URL}/password-reset`, {
