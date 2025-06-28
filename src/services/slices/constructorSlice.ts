@@ -160,3 +160,5 @@ export const {
 
 export const constructorReducer = constructorSlice.reducer;
 export const closeOrderModalReducer = constructorSlice.reducer;
+
+export type { ConstructorState, TConstructorIngredient };

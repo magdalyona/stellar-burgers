@@ -8,8 +8,8 @@ import { getConstructorState } from '../../services/slices/constructorSlice';
 
 export const IngredientsCategory = forwardRef<
   HTMLUListElement,
-  TIngredientsCategoryProps
->(({ title, titleRef, ingredients }, ref) => {
+  TIngredientsCategoryProps & { 'data-cy'?: string }
+>(({ title, titleRef, ingredients, 'data-cy': dataCy }, ref) => {
   const { bun, ingredients: items } = useSelector(getConstructorState);
 
   const ingredientsCounters = useMemo(() => {
@@ -28,6 +28,7 @@ export const IngredientsCategory = forwardRef<
       ingredients={ingredients}
       ingredientsCounters={ingredientsCounters}
       ref={ref}
+      data-cy={dataCy}
     />
   );
 });
