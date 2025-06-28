@@ -1,23 +1,37 @@
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 
-export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+import styles from '../ui/order-info/order-info.module.css';
 
-  const ingredients: TIngredient[] = [];
+import { useParams } from 'react-router-dom';
+import { useSelector, useDispatch } from '../../services/store';
+import { getIngredientsSelector } from '../../services/slices/ingredientSlice';
+import {
+  getCurrentOrder,
+  getOrderByNumber
+} from '../../services/slices/orderSlice';
 
-  /* Готовим данные для отображения */
+type OrderInfoProps = {
+  isModal?: boolean;
+};
+
+export const OrderInfo: FC<OrderInfoProps> = ({ isModal }) => {
+  const orderData = useSelector(getCurrentOrder);
+  const dispatch = useDispatch();
+
+  const ingredients = useSelector(getIngredientsSelector);
+
+  const { number } = useParams<{ number: string }>();
+
+  useEffect(() => {
+    if (number) {
+      dispatch(getOrderByNumber(parseInt(number)));
+    }
+  }, [dispatch, number]);
+
+  /* eslint-disable */
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 
@@ -30,7 +44,9 @@ export const OrderInfo: FC = () => {
     const ingredientsInfo = orderData.ingredients.reduce(
       (acc: TIngredientsWithCount, item) => {
         if (!acc[item]) {
-          const ingredient = ingredients.find((ing) => ing._id === item);
+          const ingredient = ingredients.find(
+            (ing: TIngredient) => ing._id === item
+          );
           if (ingredient) {
             acc[item] = {
               ...ingredient,
@@ -58,10 +74,23 @@ export const OrderInfo: FC = () => {
       total
     };
   }, [orderData, ingredients]);
+  /* eslint-enable */
 
   if (!orderInfo) {
     return <Preloader />;
   }
 
-  return <OrderInfoUI orderInfo={orderInfo} />;
+  return (
+    <>
+      {!isModal && (
+        <p
+          className='text text_type_digits-default mt-5'
+          style={{ textAlign: 'center' }}
+        >
+          #{orderInfo.number}
+        </p>
+      )}
+      <OrderInfoUI orderInfo={orderInfo} />
+    </>
+  );
 };
